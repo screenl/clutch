@@ -336,24 +336,25 @@ Section Coupl.
 Definition biased_flip: val :=
   rec: "f" "x" := (rand (#2 * "x") < "x").
 
+(* A coupling of uniform and the step function*)
 
-Definition fil_bias_pmf (n : nat): fin (S (2 * (S (n)))) * mstate fil_random_walk -> R := 
+Definition fil_coupl_pmf (n : nat): fin (S (2 * (S (n)))) * mstate fil_random_walk -> R := 
 fun p => 
   if bool_decide 
     (((fst p < S n)%nat ∧ (snd p = n)%nat) ∨ 
     ((S n <= fst p)%nat ∧ (snd p = (S (S n)))%nat)) 
   then 1 / (2 * (S n) + 1)%nat else 0.
 
-Lemma fil_bias_pos: ∀ (n : nat) (a : fin (S (2 * S n)) * mstate fil_random_walk),
-  0 <= fil_bias_pmf n a.
+Lemma fil_coupl_pos: ∀ (n : nat) (a : fin (S (2 * S n)) * mstate fil_random_walk),
+  0 <= fil_coupl_pmf n a.
 Proof.
-  intros. rewrite /fil_bias_pmf. destruct a. 
+  intros. rewrite /fil_coupl_pmf. destruct a. 
   case_bool_decide; auto; try real_solver. 
 Qed.
 
-Lemma fil_bias_exseries: ∀ n : nat, ex_seriesC (fil_bias_pmf n). 
+Lemma fil_coupl_exseries: ∀ n : nat, ex_seriesC (fil_coupl_pmf n). 
 Proof.
-  intros. rewrite /fil_bias_pmf. 
+  intros. rewrite /fil_coupl_pmf. 
   apply ex_seriesC_prod; auto.
   - intros. case_bool_decide; real_solver.
   - intros. destruct (dec_lt a (S n)).
@@ -374,33 +375,33 @@ Proof.
   - apply ex_seriesC_finite. 
 Qed.
 
-Definition fil_bias_pmf' (n : nat): mstate fil_random_walk *  fin (S (2 * (S (n)))) -> R := 
+Definition fil_coupl_pmf' (n : nat): mstate fil_random_walk *  fin (S (2 * (S (n)))) -> R := 
 fun p => 
   if bool_decide 
     (((snd p < S n)%nat ∧ (fst p = n)%nat) ∨ 
     ((S n <= snd p)%nat ∧ (fst p = (S (S n)))%nat)) 
   then 1 / (2 * (S n) + 1)%nat else 0.
 
-Lemma fil_bias_pos': ∀ (n : nat) (a : mstate fil_random_walk * fin (S (2 * S n)) ),
-  0 <= fil_bias_pmf' n a.
+Lemma fil_coupl_pos': ∀ (n : nat) (a : mstate fil_random_walk * fin (S (2 * S n)) ),
+  0 <= fil_coupl_pmf' n a.
 Proof.
-  intros. rewrite /fil_bias_pmf'. destruct a. 
+  intros. rewrite /fil_coupl_pmf'. destruct a. 
   case_bool_decide; auto; try real_solver. 
 Qed.
 
-Lemma fil_bias_exseries': ∀ n : nat, ex_seriesC (fil_bias_pmf' n). 
+Lemma fil_coupl_exseries': ∀ n : nat, ex_seriesC (fil_coupl_pmf' n). 
 Proof.
   intros.
   apply ex_seriesC_prod; auto.
-  - intros. apply fil_bias_pos'.
+  - intros. apply fil_coupl_pos'.
   - intros. apply ex_seriesC_finite.
-  - replace (λ a : mstate fil_random_walk, SeriesC (λ b : fin (S (2 * S n)), fil_bias_pmf' n (a, b))) with (λ a : mstate fil_random_walk, SeriesC (λ b : fin (S (2 * S n)), fil_bias_pmf (n)(b, a))). 2:  {
+  - replace (λ a : mstate fil_random_walk, SeriesC (λ b : fin (S (2 * S n)), fil_coupl_pmf' n (a, b))) with (λ a : mstate fil_random_walk, SeriesC (λ b : fin (S (2 * S n)), fil_coupl_pmf (n)(b, a))). 2:  {
       apply functional_extensionality.
       intros. f_equal.
     }
     apply fubini_pos_ex_seriesC_prod_ex_rl.
-    + intros. apply fil_bias_pos.
-    + apply fil_bias_exseries.
+    + intros. apply fil_coupl_pos.
+    + apply fil_coupl_exseries.
 Qed.
 
 Local Lemma natnle (n m : nat) : (n < m)%nat -> ¬ (m ≤ n)%nat.
@@ -460,14 +461,14 @@ Proof.
       rewrite plus_INR. simpl. field_simplify. real_solver.
 Qed.
 
-Lemma fil_bias_ser_y (n: nat) (b : fin (S (2 * S n))) : SeriesC (λ a : mstate fil_random_walk, fil_bias_pmf' n (a, b)) = 1 / (2 * S n + 1)%nat.
+Lemma fil_coupl_ser_y (n: nat) (b : fin (S (2 * S n))) : SeriesC (λ a : mstate fil_random_walk, fil_coupl_pmf' n (a, b)) = 1 / (2 * S n + 1)%nat.
 Proof.
   intros.
   destruct (lt_dec b (S n)).
   - rewrite (SeriesC_ext _ (λ a, if bool_decide (a = n)%nat then 1 / (2 * S n + 1)%nat else 0)).
     2: {
       intros.
-      rewrite /fil_bias_pmf'. 
+      rewrite /fil_coupl_pmf'. 
       case_bool_decide; case_bool_decide; auto; try tauto.
       simpl in H. destruct H; destruct H; try lia.
       apply natnle in l. apply l in H.
@@ -477,7 +478,7 @@ Proof.
   - rewrite (SeriesC_ext _ (λ a, if bool_decide (a = S (S n))%nat then 1 / (2 * S n + 1)%nat else 0)).
     2: {
       intros.
-      rewrite /fil_bias_pmf'. 
+      rewrite /fil_coupl_pmf'. 
       case_bool_decide; case_bool_decide; auto; try tauto.
       assert False. { 
         apply H. simpl. right. split; try lia. 
@@ -489,11 +490,11 @@ Proof.
 Qed.
 
 
-Lemma fil_bias_ser_x (n: nat) x: SeriesC
-  (λ b : fin (S (2 * S n)), fil_bias_pmf' n (x, b)) = step (S n) x.
+Lemma fil_coupl_ser_x (n: nat) x: SeriesC
+  (λ b : fin (S (2 * S n)), fil_coupl_pmf' n (x, b)) = step (S n) x.
 Proof.
   intros.
-  rewrite /fil_bias_pmf'.
+  rewrite /fil_coupl_pmf'.
   destruct (Nat.eq_dec x (S (S n))).
   - replace (λ _, _) with (λ b : fin (S (2 * S n)), if bool_decide (S n ≤ b) then 1 / (2 * S n + 1)%nat else 0). 2: {
       apply functional_extensionality.
@@ -538,17 +539,17 @@ Proof.
     
 Qed.
 
-Program Definition fil_bias (n : nat) : distr (mstate fil_random_walk * fin (S (2 * (S n)))) := MkDistr (fil_bias_pmf' n) _ _ _.
-Next Obligation. apply fil_bias_pos'. Qed.
-Next Obligation. apply fil_bias_exseries'. Qed.
-Next Obligation. intros. rewrite /fil_bias_pmf. 
+Program Definition fil_coupl (n : nat) : distr (mstate fil_random_walk * fin (S (2 * (S n)))) := MkDistr (fil_coupl_pmf' n) _ _ _.
+Next Obligation. apply fil_coupl_pos'. Qed.
+Next Obligation. apply fil_coupl_exseries'. Qed.
+Next Obligation. intros. rewrite /fil_coupl_pmf. 
   rewrite fubini_pos_seriesC_prod_lr. 
-  - erewrite SeriesC_ext. 2 : { apply fil_bias_ser_x. }
+  - erewrite SeriesC_ext. 2 : { apply fil_coupl_ser_x. }
     rewrite biased_conv_comb_mass. 
     rewrite !dret_mass. field_simplify.
     lra.
-  - intros. apply fil_bias_pos'.
-  - apply fil_bias_exseries'.
+  - intros. apply fil_coupl_pos'.
+  - apply fil_coupl_exseries'.
 Qed.
 
 (* is it possible to give a more general specification? *)
@@ -567,19 +568,19 @@ Proof.
       apply (λ x y, if bool_decide (fin_to_nat y < S n)%nat then x = n else x = S (S n)).
     }
     replace (Z.to_nat (2*S n)) with (2 * S n)%nat. 2: { lia. }
-    exists (fil_bias n).
+    exists (fil_coupl n).
     unfold is_refRcoupl. split; try split.
     - apply distr_ext_pmf. apply functional_extensionality.
-      intros. rewrite lmarg_pmf. apply fil_bias_ser_x.
-    - intros. rewrite rmarg_pmf. rewrite /pmf. simpl. rewrite /fil_bias_pmf'.
-      rewrite fil_bias_ser_y. simpl. rewrite Rdiv_1_l. simpl.
+      intros. rewrite lmarg_pmf. apply fil_coupl_ser_x.
+    - intros. rewrite rmarg_pmf. rewrite /pmf. simpl. rewrite /fil_coupl_pmf'.
+      rewrite fil_coupl_ser_y. simpl. rewrite Rdiv_1_l. simpl.
       replace (n + S (n + 0) + 1)%nat with (S (S (n + n)))%nat. 2:  {lia. }
       replace (n + S (n + 0))%nat with (S (n + n))%nat. 2 : {lia. }
       real_solver.
     - intros. destruct p. simpl.
       simpl in H.
       rewrite /pmf in H. simpl in H. 
-      rewrite /fil_bias_pmf' in H.
+      rewrite /fil_coupl_pmf' in H.
       case_bool_decide; case_bool_decide; try real_solver.
       + simpl in H0. destruct H0; try lia.
       + simpl in H0. destruct H0; try lia.

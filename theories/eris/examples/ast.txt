@@ -1,0 +1,59 @@
+From clutch.eris Require Export eris error_rules.
+
+Context `{!erisGS Σ}.
+
+Definition F : nat -> nat. Admitted.
+
+Lemma f2 n : F (S n) = F n + F n. Admitted.
+
+
+Local Open Scope R.
+
+Context {δ : markov}.
+
+Definition urw : val :=
+    (rec: "f" "n" :=
+       if: "n" < #1
+         then #()
+         else let: "x" := (rand #1) in
+                if: ("x" < #1)
+                then "f" ("n" + #1)
+                else "f" ("n" - #1)).
+
+Theorem urw_AST_aux (n : nat) E :
+  ↯ (0.999) -∗
+    WP urw #n @ E [{ v, True }].
+Proof.
+  iIntros "He".
+  iInduction n as [|n] "IH".
+  - rewrite /urw. wp_pures. auto.
+  - wp_rec. wp_pures. case_bool_decide; try lia.
+    wp_pure. wp_bind (rand _)%E.
+    iApply (twp_rand_err_amp _ _ 1 (1 / 4)%NNR). 
+Abort.
+
+Definition pterm (n : nat) (a : mstate δ) := SeriesC (exec n a).
+
+Lemma ec_ast_amplify_pre n σ ε' (H'0 : 0 < ε') (H'1 : ε' < 1) P :  
+  (∀ a : mstate δ, SeriesC (lim_exec a) = 1) ->
+    (∀ ρ m, ((□ (∀ σ', ↯(1 - pterm m σ')) -∗ P) ∗ ↯(1 - pterm (S m) ρ) -∗ P))
+      ⊢ (↯(1 - pterm n σ) -∗ P).
+Proof.
+  iIntros "% Hi". 
+  iInduction n as [|n] "IH".
+  - s
+
+
+Admitted.
+
+Lemma ec_ast_amplify ε (H : 0 < ε) ε' (H'0 : 0 < ε') (H'1 : ε' < 1) P :  
+  (∀ a : mstate δ, SeriesC (lim_exec a) = 1) ->
+    (∀ σ n, ((□ (∀ σ', ↯(1 - pterm n σ')) -∗ P) ∗ ↯(1 - pterm (S n)σ) -∗ P)) ∗ 
+    (↯ ε' -∗ P)
+      ⊢ (↯ε -∗ P).
+Proof.
+  iIntros "%Hterm [Hi Hb] He".
+  (* exists 1 - pterm(σ, n) < ε*)
+
+
+  

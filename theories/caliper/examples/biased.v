@@ -480,6 +480,9 @@ Section Coupl.
   Definition biased_flip (p q : nat) (h : p ≤ S q) : expr :=
     (rand #(q) < #(p)).
 
+  Definition biased_flip_fun : val :=
+    λ: "p" "q", (rand "q" < "p").
+
   Lemma rwp_couple_biased_flip p q h E R a1 :
     Rcoupl (qfrac_flip p q h) (step a1) R →
     {{{ specF a1 }}} biased_flip p q h @ E {{{ (b : bool) a2, RET #b; specF a2 ∗ ⌜R b a2⌝  }}}.
@@ -495,6 +498,17 @@ Section Coupl.
     case_bool_decide. 
     - iApply "HΦ". iModIntro. iFrame. case_bool_decide; auto; lia. 
     - iApply "HΦ". iModIntro. iFrame. case_bool_decide; auto; lia. 
+  Qed. 
+
+  Lemma rwp_couple_biased_flip_fun p q h E R a1 x y :
+    Rcoupl (qfrac_flip p q h) (step a1) R →
+    x = #(p) -> y = #(q) ->
+    {{{ specF a1 }}} biased_flip_fun x y @ E {{{ (b : bool) a2, RET #b; specF a2 ∗ ⌜R b a2⌝  }}}.
+  Proof.
+    iIntros (??? Φ) "Ha HΦ". subst x y. rewrite /biased_flip_fun.
+    wp_pures.
+    wp_apply (rwp_couple_biased_flip with "[Ha]"); auto.
+    apply H.
   Qed. 
 
   Lemma rwp_biased_flip p q h E :

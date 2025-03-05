@@ -363,42 +363,10 @@ Section Supermartingale.
 End Supermartingale.
 
 
-Definition fil_flip: val :=
-  rec: "f" "x" := (rand (#2 * "x") < "x").
-
-Lemma rwp_fil_flip `{!caliperG fil_random_walk Σ} E n: 
-    {{{ specF (S n) }}} fil_flip #(S n) @ E {{{ (b : bool) a, RET #b; specF a ∗ ⌜if b then a = n else a = S (S n)⌝ }}}.
-Proof.
-  iIntros "% hs hf".
-  rewrite /fil_flip.
-  wp_pures.
-  wp_apply (rwp_couple with "hs"). {
-    apply mass_pos_reducible. simpl. rewrite biased_conv_comb_mass. 
-    rewrite !dret_mass. lra.
-  }
-  { 
-    eapply Rcoupl_refRcoupl, Rcoupl_swap, Rcoupl_biased_coin_dunifP. 
-    erewrite (distr_ext (qfrac_flip (S n) _ _) (qfrac_flip (S n) (2 * S n) (inv2s n))) .
-    2 : {
-      Opaque INR.
-      rewrite /qfrac_flip. rewrite /pmf. simpl. intros. 
-      do 5 f_equal. lia.
-    }
-    apply n_step_rcoupl.
-  }
-  iIntros "%% (hs & %)".
-  simpl in H.
-  wp_pures. case_bool_decide; case_bool_decide; try lia.
-  - iApply "hf". iFrame. auto.
-  - iApply "hf". iFrame. auto.
-  Unshelve.
-  lia.
-Qed.
-
 Definition fil_prog : val :=
   rec: "f" "x" := 
     if: "x" = #0 then #() else
-    if: (fil_flip "x") 
+    if: (biased_flip_fun "x" (#2 * "x")) 
       then "f" ("x" - #1) else "f" ("x" + #1).
 
 Lemma wp_fil_rw `{!caliperG fil_random_walk Σ} (n : nat) : 
@@ -408,17 +376,21 @@ Lemma wp_fil_rw `{!caliperG fil_random_walk Σ} (n : nat) :
 Proof.
   iIntros "% hs hf".
   iLöb as "IH" forall (n).
-  unfold fil_prog.
+  wp_rec.
   wp_pures.
   destruct n. { wp_pures. by iApply "hf". }
   wp_pures. 
-  wp_apply (rwp_fil_flip with "hs").
-  iIntros "%% (hs & %H)".
-  destruct b; do 2 wp_pure.
-  - replace #(S n - 1) with #(n). 2: { do 2 f_equal. lia. }
-    subst a. wp_apply ("IH" with "[hs] [hf]"); iFrame.
-  - replace #(S n + 1) with #(S (S n)). 2: { do 2 f_equal. lia. }
-    subst a. wp_apply ("IH" with "[hs] [hf]"); iFrame.
+  wp_apply (rwp_couple_biased_flip_fun with "hs"); auto. 
+  { apply n_step_rcoupl. }
+  { do 2 f_equal. lia. }
+  iIntros "%% [Hs %]".
+  destruct b; subst a2. 
+  - wp_pures. replace #(S n - 1) with #(n). 
+    2 : { do 2 f_equal. lia. }
+    wp_apply ("IH" with "Hs"); auto.
+  - wp_pures. replace #(S n + 1) with #(S (S n)). 
+    2 : { do 2 f_equal. lia. }
+    wp_apply ("IH" with "Hs"); auto.
 Qed.
 
 Notation σ₀ := {| heap := ∅; tapes := ∅ |}.

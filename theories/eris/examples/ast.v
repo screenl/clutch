@@ -119,7 +119,7 @@ Proof.
 Qed.
 
 Lemma ec_ast_amplify_pre {δ : markov} (σ : mstate δ) n (P : mstate δ -> iProp Σ) :  
-  □ (∀ (ρ : mstate δ) m, (∀ σ': mstate δ, ↯(1 - pterm m σ') -∗ ⌜is_final σ'⌝ ∨ P σ') ∗ ↯(1 - pterm (S m) ρ) -∗ P ρ) ∗ 
+  □ (∀ (ρ : mstate δ) m, (∀ σ': mstate δ, ↯(1 - pterm m σ') -∗ P σ') ∗ ↯(1 - pterm (S m) ρ) -∗ P ρ) ∗ 
   □ (∀ (ρ : mstate δ), ⌜is_final ρ⌝ -∗ P ρ)
       ⊢ (↯(1 - pterm n σ) -∗ P σ).
 Proof.
@@ -135,13 +135,13 @@ Proof.
     iExFalso.
     by iApply ec_contradict. 
   - iApply "Hnf". iFrame. iIntros "% Herr".
-    iRight. by iApply "IH".
+    by iApply "IH".
 Qed.
 
 
 Lemma ec_ast_amplify {δ : markov} (σ : mstate δ) ε (H : 0 < ε) (P : mstate δ -> iProp Σ) :  
   (∀ a : mstate δ , SeriesC (lim_exec a) = 1) ->
-  □ (∀ (ρ : mstate δ) m, (∀ σ': mstate δ, ↯(1 - pterm m σ') -∗ ⌜is_final σ'⌝ ∨ P σ') ∗ ↯(1 - pterm (S m) ρ) -∗ P ρ) ∗ 
+  □ (∀ (ρ : mstate δ) m, (∀ σ': mstate δ, ↯(1 - pterm m σ') -∗ P σ') ∗ ↯(1 - pterm (S m) ρ) -∗ P ρ) ∗ 
   □ (∀ (ρ : mstate δ), ⌜is_final ρ⌝ -∗ P ρ)
     ⊢ (↯ε -∗ P σ).
 Proof.
@@ -173,20 +173,17 @@ Proof.
       specialize (nrw_pt_rec n t) as h. real_solver.
     + iFrame.
     + iIntros "% [[%Hv | %Hv] Herr]"; subst v; 
-      rewrite /scale_flip; rewrite /flip_is_1; wp_pures; simpl;
-      iPoseProof ("Hind" with "Herr") as "[%IF|h]"; auto; 
-      try destruct IF; try inversion H1.
-      { replace #(S n + 1) with #(S (S n)). 
-        2 : { do 4 f_equal. lia. }
-        auto. } 
-      { replace #(S n - 1) with #(n). 
-        2 : { do 4 f_equal. lia. }
-        destruct n.
-        { wp_rec. wp_pures. auto. }
-        { destruct H3. inversion H1. }}
-      { replace #(S n - 1) with #(n). 
-        2 : { do 4 f_equal. lia. }
-        auto. }
+      rewrite /scale_flip; rewrite /flip_is_1; wp_pures; simpl.
+      { 
+        replace #(S n + 1) with #(S (S n)). 
+        - by iApply "Hind".
+        - do 2 f_equal. lia.
+      }
+      { 
+        replace #(S n - 1) with #(n). 
+        - by iApply "Hind".
+        - do 2 f_equal. lia.
+      }
   - iIntros. 
     destruct ρ.
     + wp_rec. wp_pures. auto.

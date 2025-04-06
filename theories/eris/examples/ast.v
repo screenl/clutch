@@ -2,6 +2,8 @@ From clutch.eris Require Export eris error_rules.
 From clutch.eris Require Export examples.approximate_samplers.approx_higherorder_rejection_sampler.
 From clutch.caliper.examples Require Import nat_random_walk. 
 
+Section AST.
+
 Context `{!erisGS Σ}.
 
 Local Open Scope R.
@@ -190,5 +192,35 @@ Proof.
     + destruct H0. inversion H0.
 Qed.
     
+End AST.
 
-    
+Notation σ₀ := {| heap := ∅; tapes := ∅ |}.
+Notation almost_surely_terminates ρ := (SeriesC (lim_exec ρ) = 1%R).
+
+Check (σ₀).
+Check language.cfg.
+Search (language.to_val _ = Some _).
+Search (state_interp).
+
+
+(* Lemma pt_rec (m : language.state prob_lang) n: pterm n m + pterm n (S (S m))  = 2 * pterm (S n) (S m).
+
+Lemma ast_complete (e : expr) ε (m : nat) E : 
+  almost_surely_terminates (e, σ₀) ->
+  0 < ε -> 
+  ↯ ε -∗ WP e @ E [{ v, True }].
+Proof.
+  intros.
+  iIntros "Herr".
+  rewrite tgl_wp_unfold.
+  unfold tgl_wp_pre. 
+  destruct (language.to_val e) eqn: Hred.
+  { auto. } *)
+
+  (* destruct (language.to_val e) eqn: Hred.
+  - apply language.of_to_val in Hred as <-. 
+    wp_pures. auto.
+  - iApply twp_lift_step_fupd_glm; auto. *)
+
+  (* specialize (ec_ast_amplify (e, σ₀) ε H0) as Ht. *)
+  

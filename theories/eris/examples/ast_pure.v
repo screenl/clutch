@@ -695,7 +695,7 @@ Section Complete.
       }
   Qed.
 
-  Lemma AST_complete_pure (e : expr) ε (m : nat) : 
+  Theorem AST_complete_pure (e : expr) ε: 
     is_pure e = true ->
     almost_surely_terminates (e, σ₀) ->
     0 < ε -> 
